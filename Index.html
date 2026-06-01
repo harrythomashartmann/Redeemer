@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redeemer</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #10b981;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+h1 {
+    margin-top: 0;
+}
+
+select, input, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+}
+
+.earn { background: #047857; color: white; }
+.spend { background: #dc2626; color: white; }
+.add { background: #059669; color: black; }
+
+.balance {
+    font-size: 28px;
+    margin: 10px 0;
+}
+
+.history {
+    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.item {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Redeemer</h1>
+
+    <select id="users" onchange="switchUser()"></select>
+
+    <button class="add" onclick="addUser()">+ Add User</button>
+
+    <div class="balance" id="balance">0 Points</div>
+
+    <input id="amount" type="number" placeholder="Enter amount">
+
+    <button class="earn" onclick="earn()">Earn</button>
+    <button class="spend" onclick="spend()">Spend</button>
+
+    <div class="history" id="history"></div>
+</div>
+
+<script>
+let users = JSON.parse(localStorage.getItem("users")) || {
+    "Alice": {points: 0, history: []},
+    "Bob": {points: 0, history: []}
+};
+
+let currentUser = "Alice";
+
+function save() {
+    localStorage.setItem("users", JSON.stringify(users));
+}
+
+function renderUsers() {
+    let sel = document.getElementById("users");
+    sel.innerHTML = "";
+
+    for (let name in users) {
+        let opt = document.createElement("option");
+        opt.value = name;
+        opt.text = name;
+        sel.appendChild(opt);
+    }
+
+    sel.value = currentUser;
+}
+
+function updateUI() {
+    document.getElementById("balance").innerText =
+        users[currentUser].points + " Points";
+
+    let history = document.getElementById("history");
+    history.innerHTML = "";
+
+    users[currentUser].history.slice().reverse().forEach(h => {
+        let div = document.createElement("div");
+        div.className = "item";
+        div.innerText = h.text;
+        history.appendChild(div);
+    });
+
+    renderUsers();
+}
+
+function switchUser() {
+    currentUser = document.getElementById("users").value;
+    updateUI();
+}
+
+function earn() {
+    let amt = parseInt(document.getElementById("amount").value);
+    if (!amt || amt <= 0) return;
+
+    users[currentUser].points += amt;
+    users[currentUser].history.push({text: "+ " + amt + " points"});
+    document.getElementById("amount").value = "";
+
+    save();
+    updateUI();
+}
+
+function spend() {
+    let amt = parseInt(document.getElementById("amount").value);
+    if (!amt || amt <= 0) return;
+    if (amt > users[currentUser].points) return alert("Not enough points");
+
+    users[currentUser].points -= amt;
+    users[currentUser].history.push({text: "- " + amt + " points"});
+    document.getElementById("amount").value = "";
+
+    save();
+    updateUI();
+}
+
+function addUser() {
+    let name = prompt("Enter user name:");
+    if (!name || users[name]) return;
+
+    users[name] = {points: 0, history: []};
+    currentUser = name;
+
+    save();
+    updateUI();
+}
+
+updateUI();
+</script>
+
+</body>
+</html>
